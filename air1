@@ -1,0 +1,67 @@
+import pandas as pd
+import numpy as np
+
+# Load dataset
+data = pd.read_csv(r"C:\Users\CC-36\Documents\python\city.csv")
+
+# Rename if needed
+if 'PM2.5 (ug/m3)' in data.columns:
+    data.rename(columns={'PM2.5 (ug/m3)': 'PM2.5'}, inplace=True)
+
+# Convert to numeric
+cols = ['PM2.5','PM10','NO2','SO2','CO','O3']
+for col in cols:
+    data[col] = pd.to_numeric(data[col], errors='coerce')
+
+data = data.dropna()
+
+# ---- USER INPUT ----
+pm25 = float(input("Enter PM2.5: "))
+pm10 = float(input("Enter PM10: "))
+no2  = float(input("Enter NO2: "))
+so2  = float(input("Enter SO2: "))
+co   = float(input("Enter CO: "))
+o3   = float(input("Enter O3: "))
+
+# ---- AQI ----
+aqi = pm25 * 2.5
+
+def AQI_category(aqi):
+    if aqi <= 100:
+        return "Good"
+    elif aqi <= 200:
+        return "Moderate"
+    else:
+        return "Poor"
+
+print("\nPredicted AQI:", aqi)
+print("Air Quality:", AQI_category(aqi))
+
+# ---- FIND NEAREST LOCATION ----
+data['Distance'] = np.sqrt(
+    (data['PM2.5'] - pm25)**2 +
+    (data['PM10'] - pm10)**2 +
+    (data['NO2']  - no2)**2 +
+    (data['SO2']  - so2)**2 +
+    (data['CO']   - co)**2 +
+    (data['O3']   - o3)**2
+)
+
+nearest = data.loc[data['Distance'].idxmin()]
+
+# ⚠️ Use correct column name from CSV
+print("Nearest City:", nearest['City'])   # change if column name different
+print("\nPredicted AQI:", round(aqi,2))
+category = AQI_category(aqi)
+print("Air Quality:", category)
+
+# -------- ALERT SYSTEM --------
+if aqi > 300:
+    print("🚨 HEALTH ALERT: Air is VERY DANGEROUS! Avoid going outside!")
+elif aqi > 200:
+    print("⚠️ WARNING: Pollution level is HIGH. Wear a mask outdoors.")
+elif aqi > 100:
+    print("😷 CAUTION: Sensitive people may face breathing issues.")
+else:
+    print("✅ Air quality is safe.")
+   
